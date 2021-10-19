@@ -24,9 +24,7 @@ RUN export LANG=en_US.UTF-8
 RUN export LANGUAGE=en_US:en
 RUN LC_ALL=en_US.UTF-8
 
-# Ensure we're running the latest and greatest
 RUN apt-get update
-RUN apt-get -y upgrade
 
 # Needed for networking configs
 RUN apt-get install -y dnsmasq
@@ -63,6 +61,7 @@ RUN ln -sfn /usr/local/sbin/rndis.sh /usr/local/sbin/pi-gadget.sh
 # RUN ln -sfn /usr/local/sbin/uvc.sh /usr/local/sbin/pi-gadget.sh
 # PUMP 900M
 # RUN apt-get update
+# RUN apt-get -y upgrade
 # RUN apt-get install -y \
 #         git build-essential cmake python3-dev \
 #         v4l-utils
