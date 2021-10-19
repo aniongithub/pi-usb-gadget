@@ -1,0 +1,99 @@
+FROM https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-05-28/2021-05-07-raspios-buster-armhf-lite.zip
+
+# Enable SSH
+RUN touch /boot/ssh
+
+PUMP 10M
+
+# Change boot parameters to enable USB gadget mode
+RUN bash -c 'echo "dtoverlay=dwc2" >> /boot/config.txt'
+RUN bash -c 'echo "$(cat /boot/cmdline.txt) modules-load=dwc2" > /boot/cmdline.txt'
+RUN bash -c 'tr --delete "\r\n" < /boot/cmdline.txt'
+RUN bash -c 'echo "libcomposite" >> /etc/modules'
+RUN bash -c 'echo "denyinterfaces usb0" >> /etc/dhcpcd.conf'
+
+# Set up locale
+# RUN bash -c 'echo "LC_ALL=en_US.UTF-8" >> /etc/environment'
+# RUN bash -c 'echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen'
+# RUN bash -c 'echo "LANG=en_US.UTF-8" > /etc/locale.conf'
+# RUN DEBIAN_FRONTEND=noninteractive locale-gen en_US.UTF-8
+
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen 
+RUN DEBIAN_FRONTEND=noninteractive locale-gen
+RUN export LANG=en_US.UTF-8
+RUN export LANGUAGE=en_US:en
+RUN LC_ALL=en_US.UTF-8
+
+# Ensure we're running the latest and greatest
+RUN apt-get update
+RUN apt-get -y upgrade
+
+# Needed for networking configs
+RUN apt-get install -y dnsmasq
+
+# Copy our files
+INSTALL files/etc /etc
+INSTALL files/usr /usr
+
+# Uncomment one configuration to use based on target OS and functionality
+
+###########################################################################
+# Linux/Mac (CDC-ECM over USB)
+# RUN ln -sfn /usr/local/sbin/ecm.sh /usr/local/sbin/pi-gadget.sh
+###########################################################################
+
+###########################################################################
+# Windows (RNDIS over USB)
+RUN ln -sfn /usr/local/sbin/rndis.sh /usr/local/sbin/pi-gadget.sh
+###########################################################################
+
+###########################################################################
+# Linux/Mac (UVC camera + CDC-ECM)
+# RUN ln -sfn /usr/local/sbin/uvc-ecm.sh /usr/local/sbin/pi-gadget.sh
+###########################################################################
+
+###########################################################################
+# Windows (UVC camera + RNDIS)
+# Note: RNDIS doesn't work correctly at this time
+# RUN ln -sfn /usr/local/sbin/uvc-rndis.sh /usr/local/sbin/pi-gadget.sh
+###########################################################################
+
+###########################################################################
+# Linux/Mac/Windows (UVC camera)
+# RUN ln -sfn /usr/local/sbin/uvc.sh /usr/local/sbin/pi-gadget.sh
+# PUMP 900M
+# RUN apt-get update
+# RUN apt-get install -y \
+#         git build-essential cmake python3-dev \
+#         v4l-utils
+# 
+# # uvc-camera to write images to our device
+# RUN git clone https://github.com/peterbay/uvc-gadget.git /tmp/uvc-gadget
+# RUN make -C /tmp/uvc-gadget
+# RUN cp /tmp/uvc-gadget/uvc-gadget /usr/local/bin/uvc-gadget
+# 
+# # Install pyv4l2framesink to write to loopback video devices
+# RUN git clone https://github.com/aniongithub/pyv4l2framesink.git /tmp/pyv4l2framesink
+# RUN bash -c 'cd /tmp/pyv4l2framesink && mkdir build && cd build && cmake .. && make && make install'
+# 
+# RUN apt-get install -y v4l2loopback-dkms
+# 
+# # Optional - install a sample face-tracker
+# 
+# # Install docker first
+# RUN bash -c 'curl -sSL get.docker.com | sh'
+# RUN groupadd --force docker
+# RUN usermod -aG docker pi
+# # Install docker-compose
+# RUN apt-get update
+# RUN apt-get install -y git python3-pip
+# RUN pip3 install docker-compose
+# 
+# # Build our face-tracker as a docker container
+# RUN git clone -branch  feature-no-transmission -depth 1 https://github.com/aniongithub/gaze_correction.git /usr/local/src/gaze_correction
+# RUN cd /usr/local/src/gaze_correction
+# RUN docker build -t face_detector .
+
+###########################################################################
+
+RUN systemctl enable pigadget.service

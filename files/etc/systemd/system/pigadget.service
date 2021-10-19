@@ -1,0 +1,12 @@
+[Unit]
+Description=Raspberry Pi USB gadget
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pi-gadget.sh
+
+[Install]
+WantedBy=sysinit.target

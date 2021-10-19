@@ -1,0 +1,3 @@
+#!/bin/bash
+
+modprobe v4l2loopback video_nr=90 card_label="loopback"

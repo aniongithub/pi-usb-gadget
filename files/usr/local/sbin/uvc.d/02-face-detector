@@ -1,0 +1,6 @@
+#!/bin/bash
+
+loopback_device=$(v4l2-ctl --list-devices | grep -A1 loopback | grep -v loopback | xargs)
+ln -s $loopback_device /dev/uvcsrc
+
+docker run -d --privileged -it face_detector face_detector.py -i /dev/video0 -o $(realpath /dev/uvcsrc)

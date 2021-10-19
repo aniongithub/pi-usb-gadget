@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Default to /dev/video0 if we can't find our symlinked device
+[ ! -f "/dev/uvcsrc" ] && ln -s /dev/video0 /dev/uvcsrc
+
+uvc-gadget -u $(v4l2-ctl --list-devices | grep -A1 gadget | grep -v gadget | xargs) -v $(realpath /dev/uvcsrc)
